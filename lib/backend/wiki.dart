@@ -23,45 +23,35 @@ final wikiApiUrl = Uri(
 );
 final wikiBaseUrl = Uri(scheme: 'https', host: 'zh.minecraft.wiki');
 
-// 修改返回类型为 Future<WikiContent?>
 Future<WikiContent?> fetchWikiData() async {
-  try {
-    var response = await http.get(wikiApiUrl);
-    if (response.statusCode == 200) {
-      var jsonData = jsonDecode(response.body);
-      var fullHtml = parse(jsonData['parse']['text']['*']);
+  var response = await http.get(wikiApiUrl);
+  if (response.statusCode == 200) {
+    var jsonData = jsonDecode(response.body);
+    var fullHtml = parse(jsonData['parse']['text']['*']);
 
-      // 定位到特色条目区域
-      var parent = fullHtml.querySelector(
-        "div.mp-inline-sections > div.mp-left",
-      );
-      dom.Element? featuredArticleElement;
+    // 定位到特色条目区域
+    var parent = fullHtml.querySelector("div.mp-inline-sections > div.mp-left");
+    dom.Element? featuredArticleElement;
 
-      if (parent != null && parent.children.length >= 5) {
-        featuredArticleElement = parent.children[4];
-        // 如果找到了元素，进行“剥离”处理
-        return _processHtml(featuredArticleElement);
-      }
-      return null; // 或者返回一个表示“未找到”的 WikiContent
-    } else {
-      print("Response code != 200: ${response.statusCode}");
-      return null;
+    if (parent != null && parent.children.length >= 5) {
+      featuredArticleElement = parent.children[4];
+      // 剥离图片
+      return _processHtml(featuredArticleElement);
     }
-  } catch (e) {
-    print("Fetch error: $e");
     return null;
+  } else {
+    throw Exception("Response code != 200: ${response.statusCode}");
   }
 }
 
-// 私有辅助函数：提取图片并清洗 HTML
+// 提取图片
 WikiContent _processHtml(dom.Element element) {
   String? finalImageUrl;
 
-  // 1. 寻找特色图片容器 (通常是 mp-featured-img)
   var imgContainer = element.querySelector('.mp-featured-img');
 
   if (imgContainer != null) {
-    // 尝试提取 img 标签的 src
+    // 提取 src
     var imgTag = imgContainer.querySelector('img');
     if (imgTag != null) {
       var src = imgTag.attributes['src'];
@@ -74,10 +64,8 @@ WikiContent _processHtml(dom.Element element) {
         }
       }
     }
-    // 2. 关键：从 DOM 树中移除图片容器
     imgContainer.remove();
   }
 
-  // 3. 返回结果
   return WikiContent(imageUrl: finalImageUrl, cleanedHtml: element.outerHtml);
 }

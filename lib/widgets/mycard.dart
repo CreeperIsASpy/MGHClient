@@ -84,7 +84,7 @@ class _MyCardState extends State<MyCard> {
     return screenWidth * 0.8;
   }
 
-  /// 构建标题栏
+  /// 标题栏
   Widget _buildHeader(Color currentColor) {
     return GestureDetector(
       onTap: widget.isCollapsible
@@ -123,7 +123,7 @@ class _MyCardState extends State<MyCard> {
     );
   }
 
-  /// 构建可折叠的内容区域
+  /// 可折叠区域
   Widget _buildCollapsibleBody() {
     return AnimatedSize(
       duration: const Duration(milliseconds: 250),

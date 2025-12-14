@@ -1,16 +1,16 @@
-# proj0
+# MGH-Client
 
-A new Flutter project.
+杂志主页客户端（Flutter），仿照杂志主页的 UI 呈现 Minecraft 新闻。
 
-## Getting Started
+包含：
+- 中文 Minecraft Wiki 的“特色条目”内容。
+- Minecraft 版本更新简述（由 @Nattiden 制作的 [新闻主页 API](https://news.docs.bugjump.net/) 驱动）
 
-This project is a starting point for a Flutter application.
+TODO：
+- [ ] MineBBS 爬取。
+- [ ] 下方信息栏复刻。
+- [ ] 顶部欢迎条优化。
+- [ ] 宽度优化。
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+欢迎各位使用。
+LICENSE：Apache License 2.0

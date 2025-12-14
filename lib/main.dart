@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'widgets/mycard.dart';
-import 'backend/wiki.dart'; // 确保这里能引用到上面修改后的 wiki.dart
+import 'backend/wiki.dart';
+import 'backend/news.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
+import 'backend/utils.dart' as utils;
 
 void main() {
   runApp(const MyApp());
@@ -39,13 +41,14 @@ class MainWindow extends StatefulWidget {
 }
 
 class _MainWindowState extends State<MainWindow> {
-  // 修改 Future 类型为 WikiContent?
   late Future<WikiContent?> _wikiFuture;
+  late Future<Map<String, dynamic>> _newsFuture;
 
   @override
   void initState() {
     super.initState();
     _wikiFuture = fetchWikiData();
+    _newsFuture = fetchLatestNewsJson();
   }
 
   @override
@@ -57,22 +60,25 @@ class _MainWindowState extends State<MainWindow> {
         elevation: 2,
       ),
       body: Stack(
+        fit: StackFit.expand,
         children: [
+          // 1. 背景图
           Positioned.fill(
             child: Image.asset("assets/bg.png", fit: BoxFit.cover),
           ),
-          Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(vertical: 20),
+
+          // 2. 滚动内容
+          SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            child: Center(
               child: Column(
                 children: [
-                  const MyCard(
-                    title: "Welcome Card",
-                    children: [Text("Example welcome card (can't swap)")],
+                  MyCard(
+                    title: "欢迎使用杂志主页客户端",
+                    children: [Text("今天是${utils.getReadableDate()}，祝您有美好的一天！")],
                   ),
 
                   FutureBuilder<WikiContent?>(
-                    // 修改泛型
                     future: _wikiFuture,
                     builder: (context, snapshot) {
                       // case 1: 正在等待数据
@@ -116,7 +122,7 @@ class _MainWindowState extends State<MainWindow> {
                       }
 
                       // case 3: 成功获取数据
-                      // 注意：fetchWikiData 现在可能返回 null (未找到或解析失败)
+                      // 注意：fetchWikiData -> nullable
                       final wikiData = snapshot.data;
 
                       if (wikiData == null) {
@@ -135,13 +141,12 @@ class _MainWindowState extends State<MainWindow> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // A. 如果有图片，使用原生渲染
                                 if (wikiData.imageUrl != null) ...[
                                   ClipRRect(
                                     borderRadius: BorderRadius.circular(8),
                                     child: Image.network(
                                       wikiData.imageUrl!,
-                                      width: double.infinity, // 强制占满宽度
+                                      //  width: double.infinity,
                                       fit: BoxFit.cover,
                                       errorBuilder: (ctx, err, stack) =>
                                           const Text(
@@ -155,14 +160,10 @@ class _MainWindowState extends State<MainWindow> {
                                   const SizedBox(height: 12),
                                 ],
 
-                                // B. 剩下的 HTML 文本
                                 HtmlWidget(
                                   wikiData.cleanedHtml,
-                                  baseUrl:
-                                      wikiApiUrl, // 注意：这里可能需要传 Uri 或 String，看 flutter_widget_from_html 版本，建议 Uri.parse("https://zh.minecraft.wiki/") 更稳
-                                  // 简单的样式修正，不需要复杂的 Flex 处理了
+                                  baseUrl: wikiApiUrl, // baseUrl 解析相对链接
                                   customStylesBuilder: (element) {
-                                    // 确保主容器是 block，防止任何意外的 flex
                                     if (element.classes.contains(
                                       'mp-section',
                                     )) {
@@ -181,6 +182,60 @@ class _MainWindowState extends State<MainWindow> {
                           const SizedBox(height: 8),
                         ],
                       );
+                    },
+                  ),
+                  FutureBuilder<Map<String, dynamic>>(
+                    future: _newsFuture,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const MyCard(
+                          title: "新闻主页 API",
+                          children: [
+                            Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(20.0),
+                                child: CircularProgressIndicator(),
+                              ),
+                            ),
+                            Text(
+                              "正在从后端加载数据...",
+                              style: TextStyle(color: Colors.grey),
+                            ),
+                          ],
+                        );
+                      }
+
+                      if (snapshot.hasError) {
+                        return MyCard(
+                          title: "新闻主页 API",
+                          children: [
+                            Text(
+                              "加载失败: ${snapshot.error}",
+                              style: const TextStyle(color: Colors.red),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                setState(() {
+                                  _newsFuture = fetchLatestNewsJson();
+                                });
+                              },
+                              child: const Text("重试"),
+                            ),
+                          ],
+                        );
+                      }
+
+                      final newsData = snapshot.data;
+                      if (newsData == null) {
+                        return const Center(
+                          child: MyCard(
+                            title: "新闻主页 API",
+                            children: [Text("出错。")],
+                          ),
+                        );
+                      }
+
+                      return buildVersionInfoCard(newsData);
                     },
                   ),
                 ],
