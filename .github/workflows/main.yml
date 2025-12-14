@@ -2,7 +2,7 @@ name: Deploy Flutter Web to Vercel
 
 on:
   push:
-    branches: [ "main" ] # Production Branch
+    branches: [ "master" ] # Production Branch
 
 jobs:
   deploy:
