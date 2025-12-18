@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import '../widgets/mycard.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart'; // 用于 kIsWeb
 
 /* （引自新闻主页 API 文档）
 GET https://news.bugjump.net/apis/versions/latest：
@@ -39,14 +40,22 @@ GET https://news.bugjump.net/apis/versions/latest：
 
 */
 
-final newsApiUrl = Uri(
-  scheme: 'https',
-  host: 'news.bugjump.net',
-  path: 'apis/versions/latest',
-);
+Uri getBaseUri() {
+  if (kIsWeb) {
+    final newsApiUrl = Uri.parse("/api-news/apis/versions/latest"); // 用代理绕 cors
+    return newsApiUrl;
+  } else {
+    final newsApiUrl = Uri(
+      scheme: 'https',
+      host: 'news.bugjump.net',
+      path: 'apis/versions/latest',
+    );
+    return newsApiUrl;
+  }
+}
 
 Future<Map<String, dynamic>> fetchLatestNewsJson() async {
-  var response = await http.get(newsApiUrl);
+  var response = await http.get(getBaseUri());
   if (response.statusCode == 200) {
     Map<String, dynamic> jsonData = jsonDecode(response.body);
     return jsonData;

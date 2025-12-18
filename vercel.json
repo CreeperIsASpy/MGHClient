@@ -1,11 +1,24 @@
 {
   "rewrites": [
     {
-      "source": "/((?!api/.*).*)",
+      "source": "/api-news/:match*",
+      "destination": "https://news.bugjump.net/:match*"
+    },
+    {
+      "source": "/((?!api-news/|api/).*)",
       "destination": "/index.html"
     }
   ],
   "headers": [
+    {
+      "source": "/api-news/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "s-maxage=60, stale-while-revalidate=300" 
+        }
+      ]
+    },
     {
       "source": "/(.*)",
       "headers": [
