@@ -40,6 +40,16 @@ GET https://news.bugjump.net/apis/versions/latest：
 
 */
 
+Uri getProxyUrl(Uri originalUrl) {
+  if (kIsWeb) {
+    // 记得 encode
+    final encoded = Uri.encodeComponent(originalUrl.toString());
+    return Uri.parse('/api/proxy?url=$encoded');
+  }
+
+  return originalUrl;
+}
+
 Uri getBaseUri() {
   if (kIsWeb) {
     final newsApiUrl = Uri.parse("/api-news/apis/versions/latest"); // 用代理绕 cors
@@ -91,7 +101,9 @@ Widget buildVersionInfoCard(Map<String, dynamic> data) {
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
             child: Image.network(
-              releaseObj['version-image-link']!,
+              getProxyUrl(
+                Uri.parse(releaseObj['version-image-link']!),
+              ).toString(),
               fit: BoxFit.cover,
               errorBuilder: (ctx, err, stack) =>
                   const Text("图片加载失败", style: TextStyle(color: Colors.grey)),
